@@ -91,4 +91,6 @@ while True:
     else:
         print("잘못된 입력입니다.")
 
+print("go")
+
 conn.close()
