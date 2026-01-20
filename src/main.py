@@ -44,12 +44,24 @@ def main():
                 print("수정 실패 (번호 확인 필요)")
         
         elif choice == '4':
-            target_id = input("삭제할 번호: ")
-            if input("진짜 지울까요? (y/n): ") == 'y':
+            try:
+                input_value = input("삭제할 일기 번호를 입력하세요: ")
+                target_id = int(input_value)
+
                 if db.delete_entry(target_id):
-                    print("삭제 성공")
+                    print(f"{target_id}번 일기가 삭제되었습니다. ")
                 else:
-                    print("삭제 실패")
+                    print("해당 번호의 일기가 없습니다.")
+            
+            except ValueError:
+                print("에러 : 숫자만 입력해야 합니다.")
+            # except Exception as e:
+            #     print("앗! 뭔가 에러가 났어요")
+            #     print(f"에러 내용은: {e}")
+
+
+    
+
 
 if __name__ == "__main__":
     main()

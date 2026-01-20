@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+            *{
+        box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background-color: hwb(323 55% 2%);
+            height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .signup-card {
+            background-color: rgb(255, 255, 255);
+            padding: 40px;
+            width: 350px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px hsl(335, 100%, 69%);
+        }
+
+        h2 { 
+            text-align: left;
+            color: hsl(329, 100%, 50%);
+            margin-bottom: 50px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: hsl(329, 100%, 51%);
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid hsl(330, 100%, 50%);
+            border-radius: 5px;
+        }
+
+        .btn-submit {
+            width:100%;
+            padding: 12px;
+            background-color: hsl(321, 100%, 76%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-submit:hover {
+            background-color: hsl(321, 100%, 52%);
+        }
+        </style>
+</head>
+<body>
+
+    <div class="container">
+        <form class="signup-card" action="" method="POST">
+            {% csrf_token %}
+
+            <h2>회원가입</h2>
+
+            <div class="input-group">
+                <label for="userid">아이디</label>
+                <input type="text" id="userid" name="user_id" placeholder="아이디 입력" required>
+            </div>
+
+            <div class="input-group">
+                <label for="userpw">비밀번호</label>
+                <input type="password" id="userpw" name="user_pw" placeholder="비밀번호 입력" required>
+            </div>
+
+            <div class="input-group">
+                <label for="username">이름:</label>
+                <input type="text" id="username" name="user_name" placeholder="실명 입력">
+            </div>
+
+            <input type="submit" value="가입하기" class="btn-submit">
+        </form>
+    
+    </div>
+    
+</body>
+</html>

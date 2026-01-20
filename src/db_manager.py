@@ -40,8 +40,8 @@ class DiaryDB:
         sql = "UPDATE entries SET content = %s WHERE id = %s"
         self.curs.execute(sql, (new_content, entry_id))
         self.conn.commit()
-        return self.curs.rowcount > 0 
-    
+        return self.curs.rowcount > 0  
+        
     def delete_entry(self, entry_id):
         sql = "DELETE FROM entries WHERE id = %s"
         self.curs.execute(sql, (entry_id,))
