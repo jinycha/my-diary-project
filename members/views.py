@@ -15,7 +15,10 @@ def signup(request):
             user_pw=user_pw,
             user_name=user_name
         )
-        m.save()
+        s=m.save()
+        print("=="*50)
+        print(f"save result : {s}")
+        print("=="*50)
 
         return redirect('/admin/')
     else:
