@@ -23,4 +23,5 @@ urlpatterns = [
     
     # 아까 지워졌던 회원가입 길을 다시 뚫어줍니다.
     path('signup/', views.signup),
+    path('api/v1/test/', views.api_test),
 ]

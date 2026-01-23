@@ -1,5 +1,6 @@
 
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from .models import Member
 
 # Create your views here.
@@ -23,6 +24,31 @@ def signup(request):
         return redirect('/admin/')
     else:
          return render(request, 'signup.html')
+    
+def api_test(request):
+    data = {
+        "message": "안녕하세요!",
+        "weather": "맑음",
+        "user": {
+            "id": "admin", 
+            "level": 99
+        }
+    }
+
+    return JsonResponse(data, json_dumps_params={'ensure_ascii': False})
+
+def api_members(request):
+    members = Member.objects.all()
+
+    member_list = []
+    for m in members:
+        member_list.append({
+            "id": m.user_id,
+            "name": m.user_name,
+            "joined": m.created_at
+        })
+    
+    return JsonResponse({"count": len(member_list), "data": member_list})
 
 from django.contrib import admin
 from django.urls import path
