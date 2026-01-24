@@ -1,6 +1,11 @@
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
+
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .serializers import MemberSerializer
+
 from .models import Member
 
 # Create your views here.
@@ -41,18 +46,12 @@ def api_test(request):
 
     return JsonResponse(data, json_dumps_params={'ensure_ascii': False})
 
+@api_view(['GET'])
 def api_members(request):
-    members = Member.objects.all()
-
-    member_list = []
-    for m in members:
-        member_list.append({
-            "id": m.user_id,
-            "name": m.user_name,
-            "joined": m.created_at
-        })
-    
-    return JsonResponse({"count": len(member_list), "data": member_list}, json_dumps_params={'ensure_ascii': False})
+   
+   members = Member.objects.all()
+   serializer = MemberSerializer(members, many=True)
+   return Response(serializer.data)
 
 from django.contrib import admin
 from django.urls import path
