@@ -35,6 +35,10 @@ def api_test(request):
         }
     }
 
+    print(f"요청 방식 : {request.method}")
+    print(f"GET데이터 : {request.GET}")
+    
+
     return JsonResponse(data, json_dumps_params={'ensure_ascii': False})
 
 def api_members(request):
@@ -48,7 +52,7 @@ def api_members(request):
             "joined": m.created_at
         })
     
-    return JsonResponse({"count": len(member_list), "data": member_list})
+    return JsonResponse({"count": len(member_list), "data": member_list}, json_dumps_params={'ensure_ascii': False})
 
 from django.contrib import admin
 from django.urls import path
