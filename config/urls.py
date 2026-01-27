@@ -26,4 +26,5 @@ urlpatterns = [
     path('api/v1/test/', views.api_test),
     path('api/v1/members/', views.api_members),
     path('', views.api_test),
+    path('api/v1/chat/', views.api_chat),
 ]
