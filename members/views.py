@@ -1,38 +1,78 @@
-import os # [추가] 환경변수 읽기용
-from dotenv import load_dotenv # [추가] .env 파일 로드용
-from django.shortcuts import render, redirect
-from django.http import JsonResponse
+import os
+import json
+from dotenv import load_dotenv
 from openai import OpenAI
 
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.db import IntegrityError
+from django.views.decorators.csrf import csrf_exempt
+
+# DRF 관련 모듈들이에요.. 요오..
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+
 from .serializers import MemberSerializer
 from .models import Member
 
 load_dotenv()
 
-# Create your views here.
-def signup(request):
+# ------------------------------------------------------------------
+# 1) MemberViewSet: 회원가입(create)과 목록조회(list)를 한 번에!
+# ------------------------------------------------------------------
+class MemberViewSet(viewsets.ModelViewSet):
+    """
+    주인님, 이 ViewSet 하나로 회원가입과 목록 조회가 모두 해결돼요오..!! 🐾
+    - POST /api/members/ : 회원가입 (create)
+    - GET /api/members/  : 회원 목록 조회 (list)
+    """
+    queryset = Member.objects.all()
+    serializer_class = MemberSerializer
 
-    if request.method == 'POST':
-        user_id = request.POST.get('user_id')
-        user_pw = request.POST.get('user_pw')
-        user_name = request.POST.get('user_name')
+    # 회원가입 로직을 주인님의 의도에 맞게 커스텀했어용.. 냥!
+    def create(self, request, *args, **kwargs):
+        print("MemberViewSet - create() 호출됨----------")
+        
+        # DRF는 request.data로 데이터를 가져오는 게 국룰이에용..
+        user_id = request.data.get('user_id')
+        user_pw = request.data.get('user_pw')
+        user_name = request.data.get('user_name')
 
-        m = Member(
-            user_id=user_id,
-            user_pw=user_pw,
-            user_name=user_name
-        )
-        s=m.save()
-        print("=="*50)
-        print(f"save result : {s}")
-        print("=="*50)
+        try:
+            # 1. 시리얼라이저를 통해 데이터를 검증하고 저장해용..
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            
+            # 2. 저장 성공 시 응답 (데이터를 다시 조회할 필요 없이 serializer.data에 다 들어있어용!)
+            return Response({
+                "status": "success",
+                "message": "저장에 성공했습니다.",
+                "db_id": serializer.data.get('user_id'),
+                "db_name": serializer.data.get('user_name')
+            }, status=status.HTTP_201_CREATED)
 
-        return redirect('/admin/')
-    else:
-         return render(request, 'signup.html')
-    
+        except IntegrityError:
+            # 3. 아이디 중복 에러 처리예용.. 요오..
+            return Response({
+                "status": "error",
+                "code": 400,
+                "message": "중복된 아이디입니다."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            # 4. 그 외 모든 에러 처리예용..
+            return Response({
+                "status": "error",
+                "code": 500,
+                "message": f"오류가 발생했습니다: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# ------------------------------------------------------------------
+# 2) 기타 API 및 기능들 (기존 로직 유지)
+# ------------------------------------------------------------------
+
 def api_test(request):
     data = {
         "message": "안녕하세요!",
@@ -42,30 +82,12 @@ def api_test(request):
             "level": 99
         }
     }
-
     print(f"요청 방식 : {request.method}")
-    print(f"GET데이터 : {request.GET}")
-    
-
     return JsonResponse(data, json_dumps_params={'ensure_ascii': False})
-
-@api_view(['GET'])
-def api_members(request):
-   
-   print("api_members-------------")
-   members = Member.objects.all()
-   serializer = MemberSerializer(members, many=True)
-   return Response(serializer.data)
-
-from django.contrib import admin
-from django.urls import path
-from members import views
-
-import json
 
 @api_view(['POST'])
 def api_chat(request):
-    print("-"*20)
+    print("-" * 20)
     print("api_chat() called")
     user_prompt = request.data.get('prompt')
     
@@ -75,36 +97,26 @@ def api_chat(request):
     try:
         api_key = os.getenv('OPENAI_API_KEY')
         client = OpenAI(api_key=api_key) 
-
-        # model_name = os.getenv('OPENAI_MODEL', 'gpt-5.2') # 기본값 설정 가능
-        # temperature는 숫자로 변환이 필요합니다 (os.getenv는 문자열을 돌려주기 때문)
         temp = float(os.getenv('OPENAI_TEMPERATURE', 0.7))
 
-        
         chat_completion = client.chat.completions.create(
-
             model="gpt-5.2",
             response_format={"type": "json_object"},
-            
-        #    
-        messages=[
+            messages=[
                 {
                     "role": "system", 
                     "content": (
                         "너는 사주 전문가야. 사용자의 정보를 바탕으로 운세를 풀어줘. "
                         "반드시 아래의 JSON 형식으로만 응답해줘: "
-                        "{ 'today_fortune': '...', 'yearly_fortune': '...' }" # JSON 구조 정의
+                        "{ 'today_fortune': '...', 'yearly_fortune': '...' }"
                     )
                 },
                 {"role": "user", "content": user_prompt}
             ],
-            temperature=0.7,
+            temperature=temp,
         )
         raw_json_str = chat_completion.choices[0].message.content
         fortune_data = json.loads(raw_json_str)
-
-        print(f"today : {fortune_data.get('today_fortune')}")
-        print(f"year : {fortune_data.get('yearly_fortune')}")
 
         return Response({
             "status": "success",
@@ -115,19 +127,3 @@ def api_chat(request):
     except Exception as e:
         print(f"API 호출 에러: {e}")
         return Response({"error": str(e)}, status=500)
-    # return Response({
-    #     "question": user_prompt,
-    #     "answer": ai_response
-    
-    # return Response({
-    #     "today_fortune": today.strip(),
-    #     "yearly_fortune": yearly.strip()
-    # })
-
-    
-# urlpatterns = [
-#     path('admin/', admin.site.urls),
-
-#     path('signup/', views.signup),
-# ]
-
